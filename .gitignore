@@ -1,0 +1,6 @@
+.venv/
+protocols/__pycache__/
+protocols/simulators/__pycache__/
+protocols/migrations/
+qkd_gui/__pycache__/
+db.sqlite3

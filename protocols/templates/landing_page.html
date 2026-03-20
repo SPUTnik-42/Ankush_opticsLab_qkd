@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}Welcome - BBM92 QKD Simulator{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 800px; margin: 2rem auto; text-align: center;">
+    <h1 style="font-size: 2.5rem; margin-bottom: 1rem;">Quantum Key Distribution (QKD)</h1>
+    <p style="font-size: 1.1rem; color: #555; margin-bottom: 2rem;">
+        QKD allows two parties to produce a shared random secret key known only to them, which can then be used to encrypt and decrypt messages. The BBM92 is an entanglement-based QKD protocol offering robust security governed by the laws of quantum mechanics.
+    </p>
+    <a href="{% url 'dashboard' protocol_name='bbm92' %}" 
+    class="btn-primary" style="font-size: 1.2rem; padding: 12px 30px;"> BBM92 </a>
+</div>
+{% endblock %}

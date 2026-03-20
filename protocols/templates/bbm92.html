@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+
+{% block extra_css %}
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 2rem;
+}
+.sidebar {
+    background: var(--white);
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+    max-height: 85vh;
+    overflow-y: auto;
+}
+.results-area {
+    background: var(--white);
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+    text-align: center;
+}
+fieldset {
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    background-color: #fafafa;
+}
+legend {
+    font-weight: bold;
+    color: var(--primary);
+    background: var(--white);
+    padding: 0 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+}
+.checkbox-group label {
+    display: inline-block;
+    margin-right: 10px;
+    font-weight: normal;
+}
+.plot-img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    border: 1px solid #eee;
+}
+{% endblock %}
+
+{% block content %}
+<div style="background: var(--white); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 2rem;">
+    <h2 style="color: var(--primary); margin-top: 0; margin-bottom: 0.5rem;">BBM92 Protocol Simulation</h2>
+    <p style="margin: 0; line-height: 1.6;">
+        The BBM92 protocol (Bennett-Brassard-Mermin 1992) is an entanglement-based Quantum Key Distribution (QKD) protocol. Instead of preparing and sending individual quantum states (as in BB84), a central source emits pairs of entangled photons distributed to Alice and Bob. They independently measure the photons in randomly chosen bases. Due to quantum correlations, their measurements yield identical bit sequences, from which a secure cryptographic key can be established. This simulator estimates both the Secret Key Rate (SKR) and Quantum Bit Error Rate (QBER) over varying distances and channels.
+    </p>
+</div>
+
+<div class="dashboard-grid">
+    <div class="sidebar">
+        <h2 style="margin-top: 0; margin-bottom: 1rem;">Simulation Parameters</h1>
+        <form method="post">
+            {% csrf_token %}
+            
+            <fieldset>
+                <legend>Source Parameters</legend>
+                <div class="form-group">
+                    <label title="Mean photon number per pulse">Mean photon number (&mu;)</label>
+                    <input type="number" step="0.001" name="mu" value="{{ request.POST.mu|default:'0.1' }}" required>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Detector Parameters</legend>
+                <div class="form-group">
+                    <label>Alice Det. Efficiency (0-1)</label>
+                    <input type="number" step="0.001" name="alice_det_eff" value="{{ request.POST.alice_det_eff|default:'0.145' }}" required>
+                </div>
+                <div class="form-group">
+                    <label>Bob Det. Efficiency (0-1)</label>
+                    <input type="number" step="0.001" name="bob_det_eff" value="{{ request.POST.bob_det_eff|default:'0.145' }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Alice Dark Count Rate (&times; 10<sup>-6</sup>)</label>
+                    <input type="number" step="0.01" name="alice_dc_base" value="{{ request.POST.alice_dc_base|default:'6.02' }}" required>
+                </div>
+                <div class="form-group">
+                    <label>Bob Dark Count Rate (&times; 10<sup>-6</sup>)</label>
+                    <input type="number" step="0.01" name="bob_dc_base" value="{{ request.POST.bob_dc_base|default:'6.02' }}" required>
+                </div>
+                <div class="form-group">
+                    <label>Intrinsic Det. Error Rate</label>
+                    <input type="number" step="0.001" name="intrinsic_err" value="{{ request.POST.intrinsic_err|default:'0.015' }}" required>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Channel Parameters</legend>
+                <div class="form-group">
+                    <label>Channel Mode</label>
+                    <select name="channel_mode">
+                        <option value="fiber" {% if request.POST.channel_mode == 'fiber' %}selected{% endif %}>Fiber</option>
+                        <option value="fso" {% if request.POST.channel_mode == 'fso' %}selected{% endif %}>FSO (Free Space Optics)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Alice Channel Base Eff.</label>
+                    <input type="number" step="0.01" name="alice_ch_base_eff" value="{{ request.POST.alice_ch_base_eff|default:'1.0' }}" required>
+                </div>
+                <div class="form-group">
+                    <label>Bob Channel Base Eff.</label>
+                    <input type="number" step="0.01" name="bob_ch_base_eff" value="{{ request.POST.bob_ch_base_eff|default:'1.0' }}" required>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Graph & Plot Settings</legend>
+                
+                <div class="form-group">
+                    <label>Max Distance (km)</label>
+                    <input type="number" step="1" name="max_distance" value="{{ request.POST.max_distance|default:'350' }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Position of Source</label>
+                    <select name="position_of_source">
+                        <option value="middle" {% if request.POST.position_of_source == 'middle' %}selected{% endif %}>Middle</option>
+                        <option value="alice" {% if request.POST.position_of_source == 'alice' %}selected{% endif %}>Alice</option>
+                    </select>
+                </div>
+
+                <!-- Fiber specific lists -->
+                <div class="form-group" style="border-left: 3px solid var(--secondary); padding-left:10px;">
+                    <label title="Comma separated">Fiber Attenuation List (dB/km)</label>
+                    <input type="text" name="fiber_att_list" value="{{ request.POST.fiber_att_list|default:'0.18, 0.21, 0.24' }}" required>
+                </div>
+
+                <!-- FSO specific lists -->
+                <div class="form-group" style="border-left: 3px solid var(--secondary); padding-left:10px; margin-top:10px;">
+                    <label title="Comma separated">Atmos. Visibility List (km)</label>
+                    <input type="text" name="atmos_vis_list" value="{{ request.POST.atmos_vis_list|default:'40, 30, 20, 10, 5' }}" required>
+                    
+                    <label style="margin-top: 10px;">Beam Waist (m) [FSO]</label>
+                    <input type="number" step="0.001" name="beam_waist" value="{{ request.POST.beam_waist|default:'0.01' }}" required>
+                    
+                    <label style="margin-top: 10px;">Receiver Diameter (m) [FSO]</label>
+                    <input type="number" step="0.01" name="receiver_diam" value="{{ request.POST.receiver_diam|default:'0.3' }}" required>
+
+                    <label style="margin-top: 10px;">Weather List [FSO]</label>
+                    <div class="checkbox-group" style="background:#fff; border:1px solid #ccc; padding:8px; border-radius:4px; max-height:120px; overflow-y:auto; font-size:0.9rem;">
+                        <div><input type="checkbox" name="weather" value="very clear" {% if not simulated or "very clear" in request.POST.getlist.weather %}checked{% endif %}> Very Clear</div>
+                        <div><input type="checkbox" name="weather" value="clear" {% if not simulated or "clear" in request.POST.getlist.weather %}checked{% endif %}> Clear</div>
+                        <div><input type="checkbox" name="weather" value="partly clear" {% if not simulated or "partly clear" in request.POST.getlist.weather %}checked{% endif %}> Partly Clear</div>
+                        <div><input type="checkbox" name="weather" value="hazy" {% if not simulated or "hazy" in request.POST.getlist.weather %}checked{% endif %}> Hazy</div>
+                        <div><input type="checkbox" name="weather" value="foggy" {% if not simulated or "foggy" in request.POST.getlist.weather %}checked{% endif %}> Foggy</div>
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Protocol / Others</legend>
+                <div class="form-group">
+                    <label>Bandwidth (&times; 10&sup1;&sup1; Hz)</label>
+                    <input type="number" step="0.1" name="bw_base" value="{{ request.POST.bw_base|default:'2' }}" required>
+                </div>
+                <div class="form-group">
+                    <label>Repetition Rate (&times; 10<sup>8</sup> Hz)</label>
+                    <input type="number" step="0.1" name="rep_base" value="{{ request.POST.rep_base|default:'2.49' }}" required>
+                </div>
+                <div class="form-group">
+                    <label>PMD Coefficient (&times; 10⁻&sup1;&sup3;)</label>
+                    <input type="number" step="0.1" name="pmd_base" value="{{ request.POST.pmd_base|default:'5' }}" required>
+                </div>
+                <div class="form-group">
+                    <label>Bidir Error Corr. Efficiency</label>
+                    <input type="number" step="0.01" name="f_corr" value="{{ request.POST.f_corr|default:'1.22' }}" required>
+                </div>
+                <div class="form-group checkbox-group" style="margin-top:10px;">
+                    <label><input type="checkbox" name="decoherence" value="yes" {% if not simulated or request.POST.decoherence == 'yes' %}checked{% endif %}> Enable Decoherence</label>
+                </div>
+            </fieldset>
+
+            <button type="submit" class="btn-primary" style="width: 100%; font-size: 1.1rem; padding: 12px;">Simulate</button>
+        </form>
+    </div>
+
+    <div class="results-area">
+        {% if simulated %}
+            <h2>Simulation Results</h2>
+            <hr style="border:0; border-top: 1px solid #eee; margin-bottom: 2rem;">
+            
+            <div style="text-align: left; background: #fafafa; border: 1px solid var(--border-color); border-radius: 6px; padding: 1.5rem; margin-top: 2rem;">
+                <h3 style="color: var(--primary); margin-top: 0;">Simulation Details & Tested Configuration</h3>
+                <ul style="line-height: 1.6; margin-bottom: 0;">
+                    <li><strong>Max Evaluated Distance:</strong> {{ summary.max_distance }} km</li>
+                    <li><strong>Channel Type:</strong> {{ summary.channel_mode }}</li>
+                    <li><strong>Mean Photon Number (&mu;):</strong> {{ summary.mu }}</li>
+                    <li><strong>Detector Efficiencies:</strong> Alice={{ summary.alice_det_eff }}, Bob={{ summary.bob_det_eff }}</li>
+                    <li><strong>Repetition Rate:</strong> {{ summary.rep_rate }} Hz</li>
+                    <li><strong>System Bandwidth:</strong> {{ summary.bandwidth }} Hz</li>
+                </ul>
+                <p style="margin-top: 1rem; color: #555; font-size: 0.95rem;">
+                    <em>* Note: The optimal operational distance occurs where the QBER resides below the theoretical 11% threshold and the Secret Key Rate (SKR) remains positive over the background noise. Check the graphs above for the exact intersection points based on these simulated constraints.</em>
+                </p>
+            </div>
+
+
+            <h3>Quantum Bit Error Rate (QBER)</h3>
+            <img src="data:image/png;base64,{{ qber_plot }}" alt="QBER Plot" class="plot-img">
+            
+            <h3>Secret Key Rate (SKR)</h3>
+            <img src="data:image/png;base64,{{ skr_plot }}" alt="SKR Plot" class="plot-img">
+            
+
+        {% else %}
+            <div style="margin-top: 30%; color: #999;">
+                <h1 style="font-size: 4rem; color: #e0e0e0; margin-bottom:0;">&#128200;</h1>
+                <h2>No Simulation Data</h2>
+                <p>Adjust the parameters on the left and click "Simulate" to generate plots.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
