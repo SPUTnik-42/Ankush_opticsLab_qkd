@@ -1,14 +1,219 @@
 {% extends 'base.html' %}
 
-{% block title %}Welcome - BBM92 QKD Simulator{% endblock %}
+{% block title %}Welcome - QKD Simulator{% endblock %}
+
+{% block extra_css %}
+<style>
+    .wizard-card {
+        max-width: 800px; 
+        margin: 2rem auto; 
+        text-align: center;
+        background: var(--white);
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        padding: 2.5rem;
+        border: 1px solid var(--border-color);
+    }
+    .wizard-step {
+        display: none;
+    }
+    .wizard-step.active {
+        display: block;
+        animation: fadeIn 0.4s ease-in-out;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .option-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin: 2rem 0;
+    }
+    .option-btn {
+        background-color: var(--white);
+        border: 2px solid var(--primary);
+        color: var(--primary);
+        padding: 15px 20px;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    .option-btn:hover {
+        background-color: var(--primary);
+        color: var(--white);
+    }
+    .option-btn.selected {
+        background-color: var(--primary);
+        color: var(--white);
+        box-shadow: 0 4px 10px rgba(94, 53, 177, 0.3);
+    }
+    .nav-buttons {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 2rem;
+    }
+    .btn-secondary {
+        background-color: #6c757d;
+        color: var(--white);
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    .btn-secondary:hover {
+        background-color: #5a6268;
+    }
+    .btn-secondary:disabled {
+        background-color: #ced4da;
+        cursor: not-allowed;
+    }
+    .progress-dots {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-bottom: 2rem;
+        align-items: center;
+    }
+    .dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background-color: var(--border-color);
+        transition: all 0.3s;
+    }
+    .dot.active {
+        background-color: var(--primary);
+        transform: scale(1.2);
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="card" style="max-width: 800px; margin: 2rem auto; text-align: center;">
-    <h1 style="font-size: 2.5rem; margin-bottom: 1rem;">Quantum Key Distribution (QKD)</h1>
-    <p style="font-size: 1.1rem; color: #555; margin-bottom: 2rem;">
-        QKD allows two parties to produce a shared random secret key known only to them, which can then be used to encrypt and decrypt messages. The BBM92 is an entanglement-based QKD protocol offering robust security governed by the laws of quantum mechanics.
-    </p>
-    <a href="{% url 'dashboard' protocol_name='bbm92' %}" 
-    class="btn-primary" style="font-size: 1.2rem; padding: 12px 30px;"> BBM92 </a>
+<div class="wizard-card" id="wizardContainer">
+    <div class="progress-dots">
+        <div class="dot active" id="dot-0"></div>
+        <div class="dot" id="dot-1"></div>
+        <div class="dot" id="dot-2"></div>
+        <div class="dot" id="dot-3"></div>
+    </div>
+
+    <!-- Step 0: Welcome -->
+    <div class="wizard-step active" id="step-0" style="text-align: center;">
+        <h1 style="font-size: 2.5rem; margin-bottom: 1rem;">Quantum Key Distribution (QKD)</h1>
+        <p style="font-size: 1.1rem; color: #555; margin-bottom: 2rem;">
+            QKD allows two parties to produce a shared random secret key known only to them, which can then be 
+            used to encrypt and decrypt messages. Follow the steps to configure your simulation.
+        </p>
+        <button class="btn-primary" onclick="nextStep()" style="font-size: 1.2rem; padding: 12px 30px;">Start</button>
+    </div>
+
+    <!-- Step 1: Protocol -->
+    <div class="wizard-step" id="step-1">
+        <h2>1. Select Protocol</h2>
+        <p>Choose the QKD protocol you want to simulate.</p>
+        <div class="option-grid">
+            <button class="option-btn" onclick="selectOption('protocol', 'bbm92', 1)">BBM92</button>
+            <button class="option-btn" onclick="selectOption('protocol', 'e91', 1)">E91</button>
+        </div>
+        <div class="nav-buttons">
+            <button class="btn-secondary" onclick="prevStep()">Back</button>
+            <button class="btn-primary" id="btnNext-1" disabled onclick="nextStep()">Next</button>
+        </div>
+    </div>
+
+    <!-- Step 2: Channel Mode -->
+    <div class="wizard-step" id="step-2">
+        <h2>2. Select Channel Mode</h2>
+        <p>How will the quantum states be transmitted?</p>
+        <div class="option-grid">
+            <button class="option-btn" onclick="selectOption('channel', 'fiber', 2)">Fiber Optics</button>
+            <button class="option-btn" onclick="selectOption('channel', 'fso', 2)">Free Space (FSO)</button>
+        </div>
+        <div class="nav-buttons">
+            <button class="btn-secondary" onclick="prevStep()">Back</button>
+            <button class="btn-primary" id="btnNext-2" disabled onclick="nextStep()">Next</button>
+        </div>
+    </div>
+
+    <!-- Step 3: Encoding -->
+    <div class="wizard-step" id="step-3">
+        <h2>3. Select Encoding Method</h2>
+        <p>Choose the property of photons used to encode information.</p>
+        <div class="option-grid">
+            <button class="option-btn" onclick="selectOption('encoding', 'polarization', 3)">Polarization</button>
+            <button class="option-btn" onclick="selectOption('encoding', 'time-bin', 3)">Time Bin</button>
+        </div>
+        <div class="nav-buttons">
+            <button class="btn-secondary" onclick="prevStep()">Back</button>
+            <button class="btn-primary" id="btnNext-3" disabled onclick="submitWizard()">Launch Simulation Dashboard</button>
+        </div>
+    </div>
 </div>
+
+<script>
+    let currentStep = 0;
+    const totalSteps = 4; // 0, 1, 2, 3
+    const selections = {
+        protocol: null,
+        channel: null,
+        encoding: null
+    };
+
+    function updateView() {
+        for (let i = 0; i < totalSteps; i++) {
+            document.getElementById(`step-${i}`).classList.remove('active');
+            if(document.getElementById(`dot-${i}`)) {
+                if (i <= currentStep) {
+                    document.getElementById(`dot-${i}`).classList.add('active');
+                } else {
+                    document.getElementById(`dot-${i}`).classList.remove('active');
+                }
+            }
+        }
+        document.getElementById(`step-${currentStep}`).classList.add('active');
+    }
+
+    function nextStep() {
+        if (currentStep < totalSteps - 1) {
+            currentStep++;
+            updateView();
+        }
+    }
+
+    function prevStep() {
+        if (currentStep > 0) {
+            currentStep--;
+            updateView();
+        }
+    }
+
+    function selectOption(category, value, stepIndex) {
+        selections[category] = value;
+        
+        let stepDiv = document.getElementById(`step-${stepIndex}`);
+        let buttons = stepDiv.querySelectorAll('.option-btn');
+        buttons.forEach(btn => {
+            btn.classList.remove('selected');
+        });
+        // Add selected to clicked button
+        event.target.classList.add('selected');
+
+        document.getElementById(`btnNext-${stepIndex}`).disabled = false;
+    }
+
+    function submitWizard() {
+        const proto = encodeURIComponent(selections.protocol.toLowerCase());
+        const chan = encodeURIComponent(selections.channel.toLowerCase());
+        const enc = encodeURIComponent(selections.encoding.toLowerCase());
+
+        const targetUrl = `/dashboard/${proto}/${chan}/${enc}`;
+        window.location.href = targetUrl;
+    }
+</script>
 {% endblock %}

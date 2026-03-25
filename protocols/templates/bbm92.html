@@ -103,10 +103,13 @@ legend {
                 <legend>Channel Parameters</legend>
                 <div class="form-group">
                     <label>Channel Mode</label>
-                    <select name="channel_mode">
-                        <option value="fiber" {% if request.POST.channel_mode == 'fiber' %}selected{% endif %}>Fiber</option>
-                        <option value="fso" {% if request.POST.channel_mode == 'fso' %}selected{% endif %}>FSO (Free Space Optics)</option>
-                    </select>
+                    <input type="text" value="{{ channel_mode|title }}" disabled style="background-color: #e9ecef; cursor: not-allowed; border: 1px solid #ced4da; font-weight: bold; color: #555;">
+                    <input type="hidden" name="channel_mode" value="{{ channel_mode }}">
+                </div>
+                <div class="form-group">
+                    <label>Encoding</label>
+                    <input type="text" value="{{ encoding|title }}" disabled style="background-color: #e9ecef; cursor: not-allowed; border: 1px solid #ced4da; font-weight: bold; color: #555;">
+                    <input type="hidden" name="encoding" value="{{ encoding }}">
                 </div>
                 <div class="form-group">
                     <label>Alice Channel Base Eff.</label>
@@ -134,32 +137,56 @@ legend {
                     </select>
                 </div>
 
+                {% if channel_mode == 'fiber' %}
                 <!-- Fiber specific lists -->
                 <div class="form-group" style="border-left: 3px solid var(--secondary); padding-left:10px;">
                     <label title="Comma separated">Fiber Attenuation List (dB/km)</label>
                     <input type="text" name="fiber_att_list" value="{{ request.POST.fiber_att_list|default:'0.18, 0.21, 0.24' }}" required>
                 </div>
+                {% endif %}
 
+                {% if channel_mode == 'fso' %}
                 <!-- FSO specific lists -->
                 <div class="form-group" style="border-left: 3px solid var(--secondary); padding-left:10px; margin-top:10px;">
-                    <label title="Comma separated">Atmos. Visibility List (km)</label>
-                    <input type="text" name="atmos_vis_list" value="{{ request.POST.atmos_vis_list|default:'40, 30, 20, 10, 5' }}" required>
-                    
-                    <label style="margin-top: 10px;">Beam Waist (m) [FSO]</label>
+                    <label>Beam Waist (m)</label>
                     <input type="number" step="0.001" name="beam_waist" value="{{ request.POST.beam_waist|default:'0.01' }}" required>
                     
-                    <label style="margin-top: 10px;">Receiver Diameter (m) [FSO]</label>
+                    <label style="margin-top: 10px;">Receiver Diameter (m)</label>
                     <input type="number" step="0.01" name="receiver_diam" value="{{ request.POST.receiver_diam|default:'0.3' }}" required>
 
-                    <label style="margin-top: 10px;">Weather List [FSO]</label>
-                    <div class="checkbox-group" style="background:#fff; border:1px solid #ccc; padding:8px; border-radius:4px; max-height:120px; overflow-y:auto; font-size:0.9rem;">
-                        <div><input type="checkbox" name="weather" value="very clear" {% if not simulated or "very clear" in request.POST.getlist.weather %}checked{% endif %}> Very Clear</div>
-                        <div><input type="checkbox" name="weather" value="clear" {% if not simulated or "clear" in request.POST.getlist.weather %}checked{% endif %}> Clear</div>
-                        <div><input type="checkbox" name="weather" value="partly clear" {% if not simulated or "partly clear" in request.POST.getlist.weather %}checked{% endif %}> Partly Clear</div>
-                        <div><input type="checkbox" name="weather" value="hazy" {% if not simulated or "hazy" in request.POST.getlist.weather %}checked{% endif %}> Hazy</div>
-                        <div><input type="checkbox" name="weather" value="foggy" {% if not simulated or "foggy" in request.POST.getlist.weather %}checked{% endif %}> Foggy</div>
-                    </div>
+                    <fieldset style="margin-top: 15px; padding: 10px; background: #fff;">
+                        <legend style="font-size: 0.9rem;">Condition Definition</legend>
+                        <div style="margin-bottom: 10px;">
+                            <label style="display:inline-block; margin-right: 15px; font-weight: normal;">
+                                <input type="radio" name="fso_condition_type" value="weather" onclick="document.getElementById('div_wea').style.display='block'; document.getElementById('div_vis').style.display='none';" {% if not request.POST or request.POST.fso_condition_type == 'weather' %}checked{% endif %}> Weather Conditions
+                            </label>
+                            <label style="display:inline-block; font-weight: normal;">
+                                <input type="radio" name="fso_condition_type" value="visibility" onclick="document.getElementById('div_wea').style.display='none'; document.getElementById('div_vis').style.display='block';" {% if request.POST.fso_condition_type == 'visibility' %}checked{% endif %}> Atm. Visibility
+                            </label>
+                        </div>
+
+                        <div id="div_wea" style="display:{% if not request.POST or request.POST.fso_condition_type == 'weather' %}block{% else %}none{% endif %};">
+                            <label>Weather Condition List</label>
+                            <div class="checkbox-group" style="border:1px solid #ccc; padding:8px; border-radius:4px; max-height:120px; overflow-y:auto; font-size:0.9rem;">
+                                <div><input type="checkbox" name="weather" value="very clear" {% if "very clear" in weather_list %}checked{% endif %}> Very Clear</div>
+                                <div><input type="checkbox" name="weather" value="clear" {% if "clear" in weather_list %}checked{% endif %}> Clear</div>
+                                <div><input type="checkbox" name="weather" value="partly clear" {% if "partly clear" in weather_list %}checked{% endif %}> Partly Clear</div>
+                                <div><input type="checkbox" name="weather" value="very hazy" {% if "very hazy" in weather_list %}checked{% endif %}> Very Hazy</div>
+                                <div><input type="checkbox" name="weather" value="hazy" {% if "hazy" in weather_list %}checked{% endif %}> Hazy</div>
+                                <div><input type="checkbox" name="weather" value="partly hazy" {% if "partly hazy" in weather_list %}checked{% endif %}> Partly Hazy</div>
+                                <div><input type="checkbox" name="weather" value="very foggy" {% if "very foggy" in weather_list %}checked{% endif %}> Very Foggy</div>
+                                <div><input type="checkbox" name="weather" value="foggy" {% if "foggy" in weather_list %}checked{% endif %}> Foggy</div>
+                                <div><input type="checkbox" name="weather" value="partly foggy" {% if "partly foggy" in weather_list %}checked{% endif %}> Partly Foggy</div>
+                            </div>
+                        </div>
+
+                        <div id="div_vis" style="display:{% if request.POST.fso_condition_type == 'visibility' %}block{% else %}none{% endif %};">
+                            <label title="Comma separated">Atmos. Visibility List (km)</label>
+                            <input type="text" name="atmos_vis_list" value="{{ request.POST.atmos_vis_list|default:'40, 30, 20, 10, 5' }}">
+                        </div>
+                    </fieldset>
                 </div>
+                {% endif %}
             </fieldset>
 
             <fieldset>
@@ -180,9 +207,11 @@ legend {
                     <label>Bidir Error Corr. Efficiency</label>
                     <input type="number" step="0.01" name="f_corr" value="{{ request.POST.f_corr|default:'1.22' }}" required>
                 </div>
+                {% if channel_mode == 'fiber' and encoding == 'polarization' %}
                 <div class="form-group checkbox-group" style="margin-top:10px;">
                     <label><input type="checkbox" name="decoherence" value="yes" {% if not simulated or request.POST.decoherence == 'yes' %}checked{% endif %}> Enable Decoherence</label>
                 </div>
+                {% endif %}
             </fieldset>
 
             <button type="submit" class="btn-primary" style="width: 100%; font-size: 1.1rem; padding: 12px;">Simulate</button>
@@ -201,8 +230,8 @@ legend {
                     <li><strong>Channel Type:</strong> {{ summary.channel_mode }}</li>
                     <li><strong>Mean Photon Number (&mu;):</strong> {{ summary.mu }}</li>
                     <li><strong>Detector Efficiencies:</strong> Alice={{ summary.alice_det_eff }}, Bob={{ summary.bob_det_eff }}</li>
-                    <li><strong>Repetition Rate:</strong> {{ summary.rep_rate }} Hz</li>
-                    <li><strong>System Bandwidth:</strong> {{ summary.bandwidth }} Hz</li>
+                    <li><strong>Repetition Rate:</strong> {{ summary.rep_rate|stringformat:".2e" }} Hz</li>
+                    <li><strong>System Bandwidth:</strong> {{ summary.bandwidth|stringformat:".2e" }} Hz</li>
                 </ul>
                 <p style="margin-top: 1rem; color: #555; font-size: 0.95rem;">
                     <em>* Note: The optimal operational distance occurs where the QBER resides below the theoretical 11% threshold and the Secret Key Rate (SKR) remains positive over the background noise. Check the graphs above for the exact intersection points based on these simulated constraints.</em>

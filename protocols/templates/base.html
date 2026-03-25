@@ -137,10 +137,10 @@
         <a href="{% url 'landing_page' %}" class="logo">
             <span style="font-size: 1.8rem;">⚛</span> QKD Simulator
         </a>
-        <div class="nav-links">
-            <a href="{% url 'landing_page' %}">Introduction</a>
-            <a href="{% url 'dashboard' protocol_name='bbm92' %}">Dashboard</a>
-        </div>
+        {% comment %} <div class="nav-links">
+            <a href="{% url 'landing_page' %}">Home</a>
+            <!-- <a href="{% url 'dashboard' protocol_name='bbm92' channel_mode='fiber' encoding='polarization' %}">Dashboard</a> -->
+        </div> {% endcomment %}
     </nav>
 
     <div class="container">

@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}Under Development - QKD Simulator{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 800px; margin: 2rem auto; text-align: center; padding: 4rem 2rem;">
+    <div style="font-size: 4rem; color: var(--secondary); margin-bottom: 1rem;">
+        ⚙️
+    </div>
+    <h1 style="font-size: 2.5rem; margin-bottom: 1rem;">Still in Development</h1>
+    <p style="font-size: 1.2rem; color: #555; margin-bottom: 2rem;">
+        The simulation for <strong>{{ protocol_name|upper }}</strong> over <strong>{{ channel_mode|title }}</strong> with <strong>{{ encoding|title }}</strong> encoding is currently under development. <br><br>
+        We are working hard to bring this feature to you soon!
+    </p>
+    <a href="{% url 'landing_page' %}" class="btn-primary" style="font-size: 1.2rem; padding: 12px 30px;">Go Back</a>
+</div>
+{% endblock %}

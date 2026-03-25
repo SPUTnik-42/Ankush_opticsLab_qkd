@@ -3,5 +3,5 @@ from . import views
 
 urlpatterns = [
     path('', views.landing_page, name='landing_page'),
-    path('dashboard/<str:protocol_name>', views.dashboard, name='dashboard'),
+    path('dashboard/<str:protocol_name>/<str:channel_mode>/<str:encoding>', views.dashboard, name='dashboard'),
 ]

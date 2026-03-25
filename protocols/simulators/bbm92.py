@@ -559,7 +559,7 @@ def plot_qber_vs_distance(mu=0.1, distance_values=None, position_of_source="midd
 
     if channel_mode == "fso":
 
-        plt.figure(figsize=(8,5))
+        plt.figure(figsize=(10,6))
 
         if (weather_list is None or len(weather_list) == 0) and (atmos_visibility_list is None or len(atmos_visibility_list) == 0):
             weather_list = ["very clear", "clear", "partly clear", "hazy", "foggy"]
@@ -600,7 +600,7 @@ def plot_qber_vs_distance(mu=0.1, distance_values=None, position_of_source="midd
                 attenuation_list.append(simulator.bob_channel.attenuation)
 
             for i in range(len(weather_list)):
-                plt.plot(distance_values, qber_values_list[i], clr[i], linewidth=2, label=f'({weather_list[i]} weather,{attenuation_list[i]} dB/km)')
+                plt.plot(distance_values, qber_values_list[i], clr[i % len(clr)], linewidth=2, label=f'({weather_list[i]} weather,{attenuation_list[i]} dB/km)')
             
 
         if (weather_list is None or len(weather_list) == 0) and len(atmos_visibility_list) > 0:
@@ -638,7 +638,7 @@ def plot_qber_vs_distance(mu=0.1, distance_values=None, position_of_source="midd
                 
                 attenuation_list.append(simulator.bob_channel.attenuation)
             for i in range(len(atmos_visibility_list)):
-                plt.plot(distance_values, qber_values_list[i], clr[i], linewidth=2, label=f'(attenuation {attenuation_list[i]} dB/km),visibility up to {atmos_visibility_list[i]} km')
+                plt.plot(distance_values, qber_values_list[i], clr[i % len(clr)], linewidth=2, label=f'(attenuation {attenuation_list[i]} dB/km),visibility up to {atmos_visibility_list[i]} km')
                 plt.grid(False)
         plt.xlabel('Distance (km)', fontsize=11)
         plt.ylabel('QBER per pulse', fontsize=11)
@@ -649,7 +649,7 @@ def plot_qber_vs_distance(mu=0.1, distance_values=None, position_of_source="midd
         plt.ylim(0,0.7)
         plt.axhline(0.11, color="orange", linestyle="--", alpha=0.7,label="QBER 11% thresold")
         plt.axhline(0.5, linestyle="--", alpha=0.6)
-        plt.legend(loc="upper right")
+        plt.legend(loc="best", fontsize=8)
         # if save_fig:
         # #     save_path = Path("C:\Users\Public\Documents")/f"qber_vs_distance_{channel_mode}.pdf"
         # #     plt.savefig(save_path, bbox_inches="tight", dpi=300)
@@ -697,16 +697,16 @@ def plot_qber_vs_distance(mu=0.1, distance_values=None, position_of_source="midd
             qber_values_list.append(qber_values)
             ber_values_list.append(ber_values)
             per_values_list.append(per_values)
-        plt.figure(figsize=(8,5))
+        plt.figure(figsize=(10,6))
         for i in range(len(attenuation_list)):
-            plt.plot(distance_values, qber_values_list[i], clr[i], linewidth=2, label=f'(fiber attenuation {attenuation_list[i]} dB/km)')
+            plt.plot(distance_values, qber_values_list[i], clr[i % len(clr)], linewidth=2, label=f'(fiber attenuation {attenuation_list[i]} dB/km)')
         plt.grid(False)
         plt.xlabel('Distance (km)', fontsize=11)
         plt.ylabel('QBER per pulse', fontsize=11)
         plt.title(f'QBER vs Distance in {channel_mode.upper()} channel(in {deco} of decoherence)',fontsize=11)
         plt.axhline(0.11, color="orange", linestyle="--", alpha=0.7,label="QBER 11% thresold")
         plt.axhline(0.5, linestyle="--", alpha=0.6)
-        plt.legend()
+        plt.legend(loc="best", fontsize=8)
         plt.xticks(fontsize=11)
         plt.yticks(fontsize=11)
         plt.xlim(0,np.max(distance_values))
@@ -717,7 +717,7 @@ def plot_qber_vs_distance(mu=0.1, distance_values=None, position_of_source="midd
         # plt.show()
 
         if simulator.is_decoherence==True:
-            plt.figure(figsize=(8,5))
+            plt.figure(figsize=(10,6))
             
             plt.plot(distance_values, qber_values_list[2], clr[1], linewidth=2, label=f'(Overall QBER)')
             plt.plot(distance_values, ber_values_list[2], clr[2], linewidth=2, label=f'(Bit error rate)')
@@ -728,7 +728,7 @@ def plot_qber_vs_distance(mu=0.1, distance_values=None, position_of_source="midd
             plt.xlabel('Distance (km)', fontsize=11)
             plt.ylabel('QBER per pulse', fontsize=11)
             plt.title(f'QBER vs Distance in {channel_mode.upper()} channel (in presence of decoherence)',fontsize=11)
-            plt.legend( loc="upper right")
+            plt.legend(loc="best", fontsize=8)
             plt.xticks(fontsize=11)
             plt.yticks(fontsize=11)
             plt.xlim(0,np.max(distance_values))
@@ -789,7 +789,7 @@ def plot_skr_vs_distance(mu=0.1, distance_values=None, position_of_source="middl
     skr_values_list = []
     attenuation_list = []
 
-    plt.figure(figsize=(8,5))
+    plt.figure(figsize=(10,6))
     if channel_mode == "fso":
         if (weather_list is None or len(weather_list) == 0) and (atmos_visibility_list is None or len(atmos_visibility_list) == 0):
             weather_list = ["very clear", "clear", "partly clear", "hazy", "foggy"]
@@ -830,9 +830,9 @@ def plot_skr_vs_distance(mu=0.1, distance_values=None, position_of_source="middl
 
             for i in range(len(weather_list)):
                 if log_scale:
-                    plt.semilogy(distance_values, skr_values_list[i], clr[i], linewidth=2, label=f'({weather_list[i]} weather,{attenuation_list[i]} dB/km)')
+                    plt.semilogy(distance_values, skr_values_list[i], clr[i % len(clr)], linewidth=2, label=f'({weather_list[i]} weather,{attenuation_list[i]} dB/km)')
                 else:
-                    plt.plot(distance_values, skr_values_list[i], clr[i], linewidth=2, label=f'({weather_list[i]} weather,{attenuation_list[i]} dB/km)')
+                    plt.plot(distance_values, skr_values_list[i], clr[i % len(clr)], linewidth=2, label=f'({weather_list[i]} weather,{attenuation_list[i]} dB/km)')
 
         if (weather_list is None or len(weather_list) == 0) and len(atmos_visibility_list) > 0:
             for visibility in atmos_visibility_list:
@@ -869,9 +869,9 @@ def plot_skr_vs_distance(mu=0.1, distance_values=None, position_of_source="middl
                 attenuation_list.append(simulator.bob_channel.attenuation)
             for i in range(len(atmos_visibility_list)):
                 if log_scale:
-                    plt.semilogy(distance_values, skr_values_list[i], clr[i], linewidth=2, label=f'(attenuation {attenuation_list[i]} dB/km),visibility up to {atmos_visibility_list[i]} km')
+                    plt.semilogy(distance_values, skr_values_list[i], clr[i % len(clr)], linewidth=2, label=f'(attenuation {attenuation_list[i]} dB/km),visibility up to {atmos_visibility_list[i]} km')
                 else:
-                    plt.plot(distance_values, skr_values_list[i], clr[i], linewidth=2, label=f'(attenuation {attenuation_list[i]} dB/km),visibility up to {atmos_visibility_list[i]} km')
+                    plt.plot(distance_values, skr_values_list[i], clr[i % len(clr)], linewidth=2, label=f'(attenuation {attenuation_list[i]} dB/km),visibility up to {atmos_visibility_list[i]} km')
 
     if channel_mode == "fiber":
         attenuation_list=fiber_attenuation_list 
@@ -905,16 +905,16 @@ def plot_skr_vs_distance(mu=0.1, distance_values=None, position_of_source="middl
             skr_values_list.append(skr_values)
         for i in range(len(attenuation_list)):
             if log_scale:
-                plt.semilogy(distance_values, skr_values_list[i], clr[i], linewidth=2, label=f'(fiber attenuation {attenuation_list[i]} dB/km)')
+                plt.semilogy(distance_values, skr_values_list[i], clr[i % len(clr)], linewidth=2, label=f'(fiber attenuation {attenuation_list[i]} dB/km)')
             else:
-                plt.plot(distance_values, skr_values_list[i], clr[i], linewidth=2, label=f'(fiber attenuation {attenuation_list[i]} dB/km)')
+                plt.plot(distance_values, skr_values_list[i], clr[i % len(clr)], linewidth=2, label=f'(fiber attenuation {attenuation_list[i]} dB/km)')
 
     plt.grid(False)
     plt.xlabel('Distance (km)', fontsize=11)
     plt.ylabel('Secret Key Rate (per second)', fontsize=11)
     plt.title(f'Secret Key Rate vs Distance ({channel_mode.upper()} channel)',fontsize=11)
     #plt.title(f'Quantum Bit Error Rate vs Distance ({channel_mode.upper()} channel)',fontsize=25)
-    plt.legend()
+    plt.legend(loc="best", fontsize=8)
     plt.xticks(fontsize=11)
     plt.yticks(fontsize=11)
     plt.xlim(0, max(distance_values))
@@ -1010,7 +1010,7 @@ if __name__ == '__main__':
                 best_lambda = lambda_values[np.argmax(R_values)]
                 mu_opt_list.append(2*best_lambda)
             mu_opt_list_values.append(mu_opt_list)
-        plt.figure(figsize=(8,5))
+        plt.figure(figsize=(10,6))
         for i in range(len(mu_opt_list_values)):
             plt.plot(e_d_values, mu_opt_list_values[i], linewidth=2.0, label=f'Alice detector efficiency = {Alice_detector_efficiencies_to_test[i]}')
         plt.xlabel("Intrinsic detector error rate ("+r'$e_d$'+")", fontsize=14)
@@ -1018,7 +1018,7 @@ if __name__ == '__main__':
         plt.title("Optimal μ vs Intrinsic Detector Error Rate")
         plt.xticks(np.arange(0.0, 0.11, 0.01))
         plt.yticks(np.arange(0.0, 0.26, 0.05))
-        plt.legend()
+        plt.legend(loc="best", fontsize=8)
         plt.xlim(0, 0.1)
         plt.ylim(0, 0.25)
         plt.grid()
@@ -1026,7 +1026,7 @@ if __name__ == '__main__':
     optimal_mu_vs_intrinsic_detector_error()
 
     #scintillation index versus distance plot for different refractive index structure parameters
-    plt.figure(figsize=(8,5))
+    plt.figure(figsize=(10,6))
     refractive_index_structure_parameter_list=[5e-18, 
                                               1e-17,  
                                               2e-17,
@@ -1042,7 +1042,7 @@ if __name__ == '__main__':
             scintillation_index =1.23*refractive_index_structure_parameter* (((2*np.pi)/1550e-9)**(7/6)) * (distance*1000)**(11/6)
             scintillation_index_list.append(scintillation_index)
             
-        plt.plot(distance_list, scintillation_index_list,clr[i],linewidth=2,)
+        plt.plot(distance_list, scintillation_index_list,clr[i % len(clr)],linewidth=2,)
         plt.xlabel("Distance (km)", fontsize=14)
         plt.ylabel(f"Scintillation Index "+ (r'$\sigma^2_{I} $'), fontsize=16)
         plt.xticks(distance_list)
@@ -1051,5 +1051,5 @@ if __name__ == '__main__':
         plt.ylim(0,np.max(scintillation_index_list))
 
     plt.title("Scintillation Index vs Distance")
-    plt.legend([r'$\sigma^2_{I} = $' +  y[0] + r'$\times 10^{'+y[1]+'}$' + r'$m^{-2/3}$' for y in [str(refractive_index_structure_parameter).split('e') for refractive_index_structure_parameter in refractive_index_structure_parameter_list]])
+    plt.legend([r'$\sigma^2_{I} = $' +  y[0] + r'$\times 10^{'+y[1]+'}$' + r'$m^{-2/3}$' for y in [str(refractive_index_structure_parameter).split('e') for refractive_index_structure_parameter in refractive_index_structure_parameter_list]], loc="best", fontsize=8)
     plt.show()

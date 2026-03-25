@@ -10,9 +10,17 @@ from .simulators import bbm92 as bbm92_simulator
 def landing_page(request):
     return render(request, 'landing_page.html')
 
-def dashboard(request, protocol_name):
-    if protocol_name != 'bbm92':
-        raise Http404("Protocol not implemented yet.")
+def dashboard(request, protocol_name, channel_mode, encoding):
+    allowed_combinations = [
+        ('bbm92', 'fiber', 'polarization'),
+        ('bbm92', 'fso', 'polarization')
+    ]
+    if (protocol_name.lower(), channel_mode.lower(), encoding.lower()) not in allowed_combinations:
+        return render(request, 'development.html', {
+            'protocol_name': protocol_name,
+            'channel_mode': channel_mode,
+            'encoding': encoding
+        })
     
     simulator = bbm92_simulator
 
@@ -39,7 +47,7 @@ def dashboard(request, protocol_name):
         intrinsic_err = get_float('intrinsic_err', 0.015)
 
         # Channel
-        channel_mode = request.POST.get('channel_mode', 'fiber')
+        channel_mode = request.POST.get('channel_mode', channel_mode.lower())
         alice_ch_base_eff = get_float('alice_ch_base_eff', 1.0)
         bob_ch_base_eff = get_float('bob_ch_base_eff', 1.0)
         
@@ -47,12 +55,18 @@ def dashboard(request, protocol_name):
         fiber_att_list = get_float_list('fiber_att_list', [0.18, 0.21, 0.24])
 
         # FSO
-        atmos_vis_list = get_float_list('atmos_vis_list', [40, 30, 20, 10, 5])
         beam_waist = get_float('beam_waist', 0.01)
         receiver_diam = get_float('receiver_diam', 0.3)
-        weather = request.POST.getlist('weather')
-        if not weather:
-            weather = ["very clear", "clear", "partly clear", "hazy", "foggy"]
+        
+        fso_condition_type = request.POST.get('fso_condition_type', 'weather')
+        if fso_condition_type == 'visibility':
+            atmos_vis_list = get_float_list('atmos_vis_list', [40, 30, 20, 10, 5])
+            weather = []
+        else:
+            weather = request.POST.getlist('weather')
+            if not weather:
+                weather = ["very clear", "clear", "partly clear", "hazy", "foggy"]
+            atmos_vis_list = []
 
         # Plot Settings
         max_distance = get_float('max_distance', 350)
@@ -99,7 +113,7 @@ def dashboard(request, protocol_name):
         )
         
         buf = io.BytesIO()
-        plt.savefig(buf, format='png', bbox_inches="tight")
+        plt.savefig(buf, format='png', bbox_inches="tight", dpi=300)
         buf.seek(0)
         qber_plot = base64.b64encode(buf.read()).decode('utf-8')
         plt.close()
@@ -119,7 +133,7 @@ def dashboard(request, protocol_name):
         )
                                       
         buf2 = io.BytesIO()
-        plt.savefig(buf2, format='png', bbox_inches="tight")
+        plt.savefig(buf2, format='png', bbox_inches="tight", dpi=300)
         buf2.seek(0)
         skr_plot = base64.b64encode(buf2.read()).decode('utf-8')
         plt.close()
@@ -129,6 +143,9 @@ def dashboard(request, protocol_name):
             'skr_plot': skr_plot,
             'simulated': True,
             'protocol_name': protocol_name,
+            'channel_mode': channel_mode.lower(),
+            'encoding': encoding.lower(),
+            'weather_list': weather,
             'summary': {
                 'mu': mu,
                 'max_distance': max_distance,
@@ -140,7 +157,13 @@ def dashboard(request, protocol_name):
             }
         }
     else:
-        context = {'simulated': False, 'protocol_name': protocol_name}
+        context = {
+            'simulated': False, 
+            'protocol_name': protocol_name,
+            'channel_mode': channel_mode.lower(),
+            'encoding': encoding.lower(),
+            'weather_list': ["very clear", "clear", "partly clear", "hazy", "foggy"]
+        }
         
     try:
         return render(request, f'{protocol_name}.html', context)
